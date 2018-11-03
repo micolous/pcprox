@@ -1,12 +1,12 @@
 # Docker container for `CmdpcProx`
 
-This directory contains a [Docker container][0] for running [`CmdpcProx1][1].
+This directory contains a [Docker container][0] for running [`CmdpcProx`][1].
 It is based on [the Debian 9.5-slim Docker base image][2].
 
 This is a very bare-bones image, only intended to offer some isolation around
 the `CmdpcProx` utility (such as disabling host network and filesystem access).
 
-> Note: This will only work on native Docker for Linux. It will not run in a
+> **Note:** This will only work on native Docker for Linux. It will not run in a
 > virtualised or cloud Docker environment, nor non-Linux platforms, nor
 > architectures other than amd64 and i686.
 
@@ -16,8 +16,8 @@ the `CmdpcProx` utility (such as disabling host network and filesystem access).
 2. [Download CmdpcProx for Linux][1] into this directory.
 3. Build the image: `docker build -t cmdpcprox .`
 
-> Note: Building the image requires an internet connection to fetch the Docker
-> images, and to also fetch a dependency from Debian's apt repository.
+> **Note:** Building the image requires an internet connection to fetch the
+> Docker images, and to also fetch a dependency from Debian's apt repository.
 
 ## Running the image
 
@@ -28,14 +28,14 @@ $ lsusb
 Bus 001 Device 002: ID 0c27:3bfa RFIDeas, Inc pcProx Card Reader
 ```
 
-> Note: The _bus_ and _device_ numbers shown here _will be different for your
-> computer_.  They will also change if the pcProx is disconnected.
+> The _bus_ and _device_ numbers shown here _will be different for your
+> computer_.  They will also change if the pcProx is reconnected.
 
 Then, run the container using the absolute path to the USB device node
 (`/dev/bus/usb/$BUS/$DEVICE`):
 
 ```
-docker run --network none --device /dev/bus/usb/001/002 -it pcprox
+$ docker run --network none --device /dev/bus/usb/001/002 -it pcprox
 ```
 
 You'll then get a (root) shell from which you can interact with `CmdpcProx`:
@@ -51,9 +51,9 @@ Usage: switch=value ...
 
 When you're done, exit that shell.
 
-> Note: Docker will automatically delete any modified files after you exit the
-> shell. If you want to back up your configuration, you should copy it out of
-> the container first.
+> **Note:** Docker will automatically delete any modified files after you exit
+> the shell. If you want to back up your configuration, you should copy it out
+> of the container first.
 > 
 > All pcProx configuration files are plain text, and can be displayed in `cat`.
 

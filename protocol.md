@@ -42,7 +42,7 @@ Data types are as follows:
 * `bool`: 1 bit, boolean field (see _sub-byte structures_ below)
 * `uint4`: 4 bit, unsigned integer (see _sub-byte structures_ below)
 * `uint8`: 8 bit, unsigned integer
-* `char`: 8 bit, ASCII character
+* `char`: 8 bit, [keyboard scancode][scancodes]
 * `uint16`: 16 bit, unsigned little-endian integer
 * `uint24`: 24 bit, unsigned little-endian integer
 
@@ -246,25 +246,53 @@ configuration_ command to resume normal device operation.
 #### Page 0 (0x80)
 
 ```c
-uint8 iFACDispLen
-uint8 iIDDispLen
+uint8 iFACDispLen           // If bFixLenDsp = 1, facility codes will be padded
+                            // to this many digits (with zeros).
+
+uint8 iIDDispLen            // If bFixLenDsp = 1, card IDs will be padded to
+                            // this many digits (with zeros).
+
 {
-   uint4 iLeadParityBitCnt
-   uint4 iTrailParityBitCnt
+   uint4 iLeadParityBitCnt  // Number of leading bits to strip from the card
+                            // data.
+
+   uint4 iTrailParityBitCnt // Number of trailing bits to strip from the card
+                            // data.
 }
-uint8 iIDBitCnt
-uint8 iTotalBitCnt
-char iFACIDDelim
-char iELDelim
+uint8 iIDBitCnt             // If bStripFac = 1, only the first iIDBitCnt bits
+                            // will be returned.
+
+uint8 iTotalBitCnt          // If bFrcBitCntEx = 1, only cards with this many
+                            // bits will be read (including parity).
+
+char iFACIDDelim            // If bUseDelFac2Id = 1, this character is sent
+                            // between the facility code and card ID.
+
+char iELDelim               // If bNoUseELChar = 0, this character is sent after
+                            // the card ID. Default = 40 (ENTER)
+
 {
-  bool bFixLenDsp
-  bool bFrcBitCntEx
-  bool bStripFac
-  bool bSndFac
-  bool bUseDelFac2Id
-  bool bNoUseELChar
-  bool bSndOnRx
-  bool bHaltKBSnd
+  bool bFixLenDsp           // If 1, IDs are padded to iIDDispLen digits, and
+                            // facility codes are padded to iFACDispLen digits.
+
+  bool bFrcBitCntEx         // If 1, only cards with iTotalBitCnt bits will be
+                            // read.
+
+  bool bStripFac            // If 1, only the first iIDBitCnt bits will be
+                            // returned for the card ID.
+
+  bool bSndFac              // If 1, and if bStripFac = 1, the facility code
+                            // will be sent.
+
+  bool bUseDelFac2Id        // If 1, and if bStripFac = 1 and bSndFac = 1,
+                            // iFACIDDelim will be sent between the facility
+                            // code and the card ID.
+
+  bool bNoUseELChar         // If 0, sends iELDelim after the card ID. If 1,
+                            // doesn't send anything.
+
+  bool bSndOnRx             // TODO
+  bool bHaltKBSnd           // TODO
 }
 ```
 
@@ -272,11 +300,11 @@ char iELDelim
 
 ```c
 uint8 unknown
-uint8 iBitStrmTO
-uint8 iIDHoldTO
-uint8 iIDLockOutTm
-uint8 iUSBKeyPrsTm
-uint8 iUSBKeyRlsTm
+uint8 iBitStrmTO            // in 4ms increments
+uint8 iIDHoldTO             // in 50ms increments
+uint8 iIDLockOutTm          // in 50ms increments
+uint8 iUSBKeyPrsTm          // in 4ms increments
+uint8 iUSBKeyRlsTm          // in 4ms increments
 {
   bool unknown
   bool bUse64Bit
@@ -285,7 +313,11 @@ uint8 iUSBKeyRlsTm
   bool bSndSFID
   bool bSndSFFC
   bool bSndSFON
-  bool bUseNumKP
+  bool bUseNumKP            // Send numbers using numeric keypad scancodes. This
+                            // requires NumLock be turned on. This is useful for
+                            // keyboards where the numbers are not on the top
+                            // row of the keyboard in the unshifted state (eg:
+                            // French AZERTY, 1-handed Dvorak layouts)
 }
 uint8 unknown
 ```
@@ -294,15 +326,21 @@ uint8 unknown
 
 ```c
 {
-  bool iRedLEDState
-  bool iGrnLEDState
-  bool iBeeperState
-  bool iRelayState
+  bool iRedLEDState         // If bAppCtrlsLED = 1, the state of the red LED.
+  bool iGrnLEDState         // If bAppCtrlsLED = 1, the state of the green LED.
+  bool iBeeperState         // Appears to do nothing?
+  bool iRelayState          // Appears to do nothing?
 }
 {
   bool bUseLeadChrs
-  bool bAppCtrlsLED
-  bool bDspHex
+  bool bAppCtrlsLED         // If 1, then iRedLEDState and iGrnLEDState will be
+                            // used. If 0, the reader controls the LEDs.
+
+  bool bDspHex              // If 1, emits card ID and facility code as
+                            // hexadecimal (only works on QWERTY-like
+                            // keyboards). If 0, emits them as decimal.
+                            // TODO: check bSndSFFC/bSndSFID
+
   bool bWiegInvData
   bool bBeepID
   bool bRevWiegBits
@@ -407,4 +445,5 @@ The total bit length of the card is
 [0]: https://github.com/micolous/pcprox
 [usb-ctrl]: https://www.beyondlogic.org/usbnutshell/usb4.shtml
 [barkweb-wiegand]: http://cardinfo.barkweb.com.au/
+[scancodes]: https://www.win.tue.nl/~aeb/linux/kbd/scancodes-14.html
 

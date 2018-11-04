@@ -26,23 +26,22 @@ This **does not** support USB Serial or other non-USB interfaces.
 This software has been developed and tested on Linux platforms.  It should work
 without trouble on any Linux-supported CPU architecture (eg: ARM).
 
-## Configuration options
-
-The configuration options have the same name as what `CmdpcProx` uses, with a
-couple of minor exceptions where multiple configuration options are on the same
-byte (eg: `iTrailChr0`).
-
-## Protocol
-
-Device communication is described in [protocol.md][1].
-
-## Library documentation
-
-TODO
-
 ## Examples
 
-See `usbtest.py`.
+* [configure.py](./configure.py): A basic configuration utility that supports
+  dumping and changing settings at the command line, and storing the running
+  configuration in the EEPROM.
+
+* [usbtest.py](./usbtest.py): An example application that runs the pcProx in
+  non-keyboard mode, and flashes the LEDs on the device.
+
+## Other documentation
+
+* [Protocol documentation][1] (also explains the behaviour of different device
+  settings)
+
+* [Physical disassembly notes](./disassembly.md)
+
 
 [0]: https://pyusb.github.io/pyusb/
 [1]: ./protocol.md

@@ -26,6 +26,25 @@ This **does not** support USB Serial or other non-USB interfaces.
 This software has been developed and tested on Linux platforms.  It should work
 without trouble on any Linux-supported CPU architecture (eg: ARM).
 
+## Setting up permissions
+
+Copy [the udev rules](./udev/60-rfideas-permissions.rules) (as root):
+
+```bash
+install -o0 -g0 -m0644 udev/60-rfideas-permissions.rules /etc/udev/rules.d/
+udevadm control --reload-rules
+```
+
+Then disconnect the pcProx (if connected), and then reconnect it.
+
+These rules use _uaccess_, which should grant access to anyone logged in locally
+via `systemd-logind` (which includes most recent Linux distros).
+
+If you're using this with a user which is not logged in locally, or are not
+using `systemd`, modify this configuration to replace `TAG+="uaccess"` with
+something like `GROUP="rfidusers"`, which will instead set ACLs based on group
+membership.
+
 ## Examples
 
 * [configure.py](./configure.py): A basic configuration utility that supports

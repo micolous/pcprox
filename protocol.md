@@ -95,11 +95,12 @@ In the case of omitted bits, the remaining bits should be considered unknown.
 
 ## USB communication
 
-The pcProx readers expose a USB HID (keyboard) device to the host.
+The pcProx readers expose a USB HID (keyboard) device to the host, using
+USB device ID `0c27:3bfa`.
 
 This driver is typically bound by the operating system, which can make direct
-communications more difficult.  Typically this will require some extra
-permissions, or changing the permissions on the device node.
+communications more difficult. There are some [udev rules
+included](./udev/60-rfideas-permissions.rules) which make this easier.
 
 All communication happens with [USB control transfers][usb-ctrl].
 

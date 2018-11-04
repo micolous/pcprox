@@ -1,0 +1,12 @@
+# udev permissions for RFIDeas pcProx reader.
+#
+# This allows direct access to the device for this library and other tools.
+#
+# To install:
+#
+#  1. copy this file to /etc/udev/rules.d
+#  2. sudo udevadm control --reload-rules
+#
+
+ATTRS{idVendor}=="0c27", ATTRS{idProduct}=="3bfa", TAG+="uaccess"
+

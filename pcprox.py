@@ -435,16 +435,20 @@ class PcProx:
     Returns a tuple of (data, buffer_bits) if there was a tag in the field.  See
     `protocol.md` for information about how to interpret this buffer.
     """
-    respf = self.interact(b'\x8f')
-    respe = self.interact(b'\x8e')
-    
-    if respf is None and respe is None:
+    # Must send 8F first, else 8E will never be set!
+    card_data = self.interact(b'\x8f')
+    if card_data is None:
       return None
 
-    bit_length = unpack('<B7x', respe)[0]
+    # This cas be skipped without issue if there is no card there
+    card_info = self.interact(b'\x8e')
+    if card_info is None:
+      return None
+
+    bit_length = unpack('<B7x', card_info)[0]
 
     # Strip off bytes that aren't needed
     buffer_byte_length = int(ceil(bit_length / 8.))
     
-    return (respf[:buffer_byte_length], bit_length)
+    return (card_data[:buffer_byte_length], bit_length)
 

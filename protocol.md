@@ -397,7 +397,7 @@ This buffer contains the card data. Parity bits will be stripped according to
 `iLeadParityBitCnt` and `iTrailParityBitCnt`.
 
 This is not a complete list -- but a [more complete list of general data layouts
-is available here][barkweb-weigand].
+is available here][barkweb-wiegand].
 
 > **Note:** A single bit length on a HID can have multiple meanings, depending
 > on the system.

@@ -26,8 +26,9 @@ The configuration options shown here are documented in configuration files
 emitted the CmdpcProx tool.
 """
 
-import time
-import struct
+from math import ceil
+from time import sleep
+from struct import unpack
 import usb.core
 import usb.util
 
@@ -126,18 +127,25 @@ def _format_hex(i):
   return ' '.join(['%02x' % c for c in i])
 
 def find_pcprox():
+  """
+  Finds a pcProx by its vendor and product ID.
+  """
   return usb.core.find(idVendor=PCPROX_VENDOR, idProduct=PCPROX_PRODUCT)
 
-def open_pcprox():
-  return PcProx(find_pcprox())
+def open_pcprox(debug=False):
+  """
+  Convienience function to find a pcProx by its vendor and product ID, then
+  open a connection to it.
+
+  debug: If True, write packet traces to stdout.
+  """
+  return PcProx(find_pcprox(), debug=debug)
 
 class DeviceInfo:
   def __init__(self, msg):
-    minor_ver, major_ver, device_type = struct.unpack('>2xBBxHx', msg)  
+    # TODO: figure this out device_type better
+    minor_ver, major_ver, self.device_type = unpack('<2xBBxHx', msg)
     self.firmware_version_tuple = (major_ver, minor_ver >> 4, minor_ver & 0xf)
-    
-    # TODO: figure this out better
-    self.device_type = struct.unpack('>H', msg[5:7])[0]
 
   @property
   def firmware_version(self):
@@ -311,7 +319,13 @@ class Configuration:
       dev.write(self.pages[i])
 
 class PcProx:
-  def __init__(self, dev, debug=True):
+  def __init__(self, dev, debug=False):
+    """
+    Opens a connection to a pcProx device.
+
+    dev: pyusb device reference to which device to connect to.
+    debug: if True, this library will write USB packets to stdout.
+    """
     # Deactivate kernel driver (usbhid), requires root privs.
     if dev.is_kernel_driver_active(0):
       dev.detach_kernel_driver(0)
@@ -347,14 +361,14 @@ class PcProx:
                                   msg) # data
 
     # TODO: handle return code
-    time.sleep(0.001)
+    sleep(0.001)
 
   def read(self):
     """
     Reads a message from the device as a bytes object.
-    
+
     All messages are 8 bytes long. ie: len(d.read) == 8.
-    
+
     If a message of all NULL bytes is returned, then this method will instead
     return None.
     """ 
@@ -399,7 +413,7 @@ class PcProx:
   def save_config(self, pages=0x7):
     """
     Writes configuration to the EEPROM for all pages.
-    
+
     pages: bitmask of pages to write to the EEPROM.
     """
     # defaults to writing all pages
@@ -415,14 +429,22 @@ class PcProx:
     """
     Reads a single tag, and immediately returns, even if no tag was in the
     field.
-    
+
     Returns None if no tag was in the field.
+
+    Returns a tuple of (data, buffer_bits) if there was a tag in the field.  See
+    `protocol.md` for information about how to interpret this buffer.
     """
     respf = self.interact(b'\x8f')
     respe = self.interact(b'\x8e')
     
     if respf is None and respe is None:
       return None
+
+    bit_length = unpack('<B7x', respe)[0]
+
+    # Strip off bytes that aren't needed
+    buffer_byte_length = int(ceil(bit_length / 8.))
     
-    return (respf, respe)    
+    return (respf[:buffer_byte_length], bit_length)
 

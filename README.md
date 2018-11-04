@@ -7,11 +7,16 @@ This has been tested with the RDR-6081AKU/APU (pcProx 125kHz HID Prox Desktop
 USB reader). It might work with other readers, but I don't have any other
 readers to test.
 
-This implements the vendor-specific USB HID used to control the device.  This
-doesn't support USB Serial or other non-USB interfaces.
+This implements [the proprietary and undocumented USB HID commands][1] that
+`CmdpcProx` uses to control the device.  As such, this will unbind the `usbhid`
+(keyboard) driver from the device in order to allow direct control.
 
-This has been developed primarily to enable use and control of the device on
-non-x86 systems (eg: ARM).
+This differs from some [other][2] [implementations][3] in that it **does not**
+use `evdev` to access the device. This also **does not** require the closed
+source `CmdpcProx` executable (which is only available for Linux x86 and
+Windows x86).
+
+This **does not** support USB Serial or other non-USB interfaces.
 
 ## Requirements
 
@@ -19,7 +24,7 @@ non-x86 systems (eg: ARM).
 * [pyusb][0]
 
 This software has been developed and tested on Linux platforms.  It should work
-without trouble on any Linux-supported CPU architecture.
+without trouble on any Linux-supported CPU architecture (eg: ARM).
 
 ## Configuration options
 
@@ -41,4 +46,6 @@ See `usbtest.py`.
 
 [0]: https://pyusb.github.io/pyusb/
 [1]: ./protocol.md
+[2]: https://github.com/goliatone/rfid-poc
+[3]: https://github.com/google/makerspace-auth/blob/master/software/authbox/badgereader_hid_keystroking.py
 

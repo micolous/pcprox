@@ -19,24 +19,39 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import pcprox
-import time
+from time import sleep
 
-def main():
-   dev = pcprox.open_pcprox()
-   dev._debug = True
-   
+def main(debug=False):
+   dev = pcprox.open_pcprox(debug=debug)
+
+   # Show the device info
    print(repr(dev.get_device_info()))
-   
+
+   # Dump the configuration from the device.
    config = dev.get_config()
    config.print_config()
    
+   # Disable sending keystrokes, as we want direct control
    config.bHaltKBSnd = True
-   config.iRedLEDState = config.iGrnLEDState = False
-   config.bAppCtrlsLED = True
-   config.set_config(dev)
-   dev.end_config()
-   time.sleep(.5)
    
+   # Turn off the red LED, turn on the green LED
+   config.iRedLEDState = False
+   config.iGrnLEDState = True
+
+   # Tells pcProx that the LEDs are under application control
+   config.bAppCtrlsLED = True
+   
+   # Send the updated configuration to the device
+   config.set_config(dev)
+
+   # Exit configuration mode
+   dev.end_config()
+
+   # Wait half a second
+   sleep(.5)
+
+   # Turn off the green LED
+   config.iGrnLEDState = False
    for x in range(10):
       print('waiting for a card...')
       
@@ -47,26 +62,50 @@ def main():
       tag = dev.get_tag()
 
       if tag is not None:
+         # We got a card!
+         # Turn off the red LED, turn on the green LED.
          config.iRedLEDState = False
          config.iGrnLEDState = True
          config.set_config(dev, [2])      
          dev.end_config()
-         print(tag)
+
+         # Print the tag ID on screen
+         print('Tag data: %s' % pcprox._format_hex(tag[0]))
+         print('Bit length: %d' % tag[1])
          break
 
-      time.sleep(.3)
+      # No card in the field, sleep for 0.3sec
+      sleep(.3)
+      
+      # Turn off the red LED
       config.iRedLEDState = False
       config.set_config(dev, [2])
       dev.end_config()
-      time.sleep(.6)
 
-   print('waiting...')
-   time.sleep(.3)   
+      # Sleep for 0.7sec
+      sleep(.7)
+
+   # When wrapping up, wait 0.3sec, so we get to see the green light on success.
+   print('exiting...')
+   sleep(.3)
+
+   # Re-enable sending keystrokes
    config.bHaltKBSnd = True
+
+   # Place the LEDs back under pcProx control
    config.iRedLEDState = config.iGrnLEDState = config.bAppCtrlsLED = False
+
+   # Send the updated configuration
    config.set_config(dev)
    dev.end_config()
-   
 
-if __name__ == "__main__":
-    main()
+   # Done.
+
+if __name__ == '__main__':
+   import argparse
+   parser = argparse.ArgumentParser()
+   parser.add_argument('-d', '--debug', action='store_true', help='Enable debug traces')
+
+   options = parser.parse_args()
+   main(options.debug)
+

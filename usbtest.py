@@ -53,11 +53,10 @@ def main(debug=False):
    # Turn off the green LED
    config.iGrnLEDState = False
    found_card = False
-   for x in range(10):
-      print('waiting for a card...')
-      
-      # flash the red LED when reading.
-      config.iRedLEDState = True
+   print('Waiting for a card... (red light should pulse)')
+   for x in range(40):
+      # flash the red LED as "1-on 1-off 1-on 3-off"
+      config.iRedLEDState = (x % 6 in (0, 2))
       config.set_config(dev, [2])      
       dev.end_config()
       tag = dev.get_tag()
@@ -75,16 +74,8 @@ def main(debug=False):
          print('Bit length: %d' % tag[1])
          break
 
-      # No card in the field, sleep for 0.3sec
-      sleep(.3)
-      
-      # Turn off the red LED
-      config.iRedLEDState = False
-      config.set_config(dev, [2])
-      dev.end_config()
-
-      # Sleep for 0.7sec
-      sleep(.7)
+      # No card in the field, sleep
+      sleep(.2)
 
    # We were sucessful, do a little light show
    if found_card:
@@ -98,7 +89,6 @@ def main(debug=False):
    else:
       # When wrapping up, wait 0.3sec, so we get to see the green light on success.
       print('No card found.')
-      sleep(.3)
 
    # Re-enable sending keystrokes
    config.bHaltKBSnd = True

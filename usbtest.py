@@ -57,7 +57,8 @@ def main(debug=False):
    for x in range(40):
       # flash the red LED as "1-on 1-off 1-on 3-off"
       config.iRedLEDState = (x % 6 in (0, 2))
-      config.set_config(dev, [2])      
+      # LED control is in page 2, so we can explicitly only configure this page.
+      config.set_config(dev, [2])
       dev.end_config()
       tag = dev.get_tag()
 

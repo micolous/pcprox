@@ -79,25 +79,27 @@ def main(set_true, set_false, set_int, write_eeprom=False, debug=False):
   print('/ Done!')
 
 if __name__ == '__main__':
-  parser = argparse.ArgumentParser()
+  parser = argparse.ArgumentParser(
+    description='Configuration utility for pcProx')
+
   parser.add_argument('-d', '--debug',
     action='store_true', help='Enable debug traces')
 
-  parser.add_argument('-t', '--set-true',
+  parser.add_argument('-t', '--set-true', metavar='bOPTION',
     action='append',
     help='Set configuration flag to true / 1')
 
-  parser.add_argument('-f', '--set-false',
+  parser.add_argument('-f', '--set-false', metavar='bOPTION',
     action='append',
     help='Set configuration flag to false / 0')
 
-  parser.add_argument('-i', '--set-int',
+  parser.add_argument('-i', '--set-int', metavar='iOPTION=VALUE',
     action=IntConfigAction,
     help='Set integer to value, eg: [-i iLeadParityBitCnt=1]')
 
   parser.add_argument('-w', '--write-eeprom',
     action='store_true',
-    help='If set, writes the configuration to EEPROM.')
+    help='Writes the configuration to EEPROM')
 
   options = parser.parse_args()
   main(options.set_true, options.set_false, options.set_int, options.write_eeprom, options.debug)

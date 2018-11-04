@@ -52,6 +52,7 @@ def main(debug=False):
 
    # Turn off the green LED
    config.iGrnLEDState = False
+   found_card = False
    for x in range(10):
       print('waiting for a card...')
       
@@ -63,11 +64,11 @@ def main(debug=False):
 
       if tag is not None:
          # We got a card!
-         # Turn off the red LED, turn on the green LED.
+         # Turn off the red LED
          config.iRedLEDState = False
-         config.iGrnLEDState = True
-         config.set_config(dev, [2])      
+         config.set_config(dev, [2])
          dev.end_config()
+         found_card = True
 
          # Print the tag ID on screen
          print('Tag data: %s' % pcprox._format_hex(tag[0]))
@@ -85,9 +86,19 @@ def main(debug=False):
       # Sleep for 0.7sec
       sleep(.7)
 
-   # When wrapping up, wait 0.3sec, so we get to see the green light on success.
-   print('exiting...')
-   sleep(.3)
+   # We were sucessful, do a little light show
+   if found_card:
+      print('We got a card! (blinking lights)')
+      for x in range(20):
+         config.iGrnLEDState = x & 0x01 == 0
+         config.iRedLEDState = x & 0x02 > 0
+         config.set_config(dev, [2])
+         dev.end_config()
+         sleep(.1)
+   else:
+      # When wrapping up, wait 0.3sec, so we get to see the green light on success.
+      print('No card found.')
+      sleep(.3)
 
    # Re-enable sending keystrokes
    config.bHaltKBSnd = True
@@ -103,7 +114,9 @@ def main(debug=False):
 
 if __name__ == '__main__':
    import argparse
-   parser = argparse.ArgumentParser()
+   parser = argparse.ArgumentParser(
+      description='Test program for pcprox which reads a card in the field')
+
    parser.add_argument('-d', '--debug', action='store_true', help='Enable debug traces')
 
    options = parser.parse_args()

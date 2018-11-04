@@ -404,7 +404,7 @@ The total bit length of the card is
 `buffer_length + iLeadParityBitCnt + iTrailParityBitCnt`.
 
 
-
+[0]: https://github.com/micolous/pcprox
 [usb-ctrl]: https://www.beyondlogic.org/usbnutshell/usb4.shtml
 [barkweb-wiegand]: http://cardinfo.barkweb.com.au/
 

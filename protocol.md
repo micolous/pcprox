@@ -113,13 +113,15 @@ A `write` is an OUT USB control transfer that always contains 8 bytes of data.
 
 This is used to send commands to the device.
 
+`hid_send_feature_report(..., pad 0 on data for report number)`
+
 The message contains these attributes:
 
 ```
 bmRequestType = 0x21
-bRequest      = 0x09
-wValue        = 0x0300
-wIndex        = 0x00
+bRequest      = 0x09    (HID_SET_REPORT)
+wValue        = 0x0300  (HID_FEATURE)
+wIndex        = 0x00    (interface)
 data          = (command to send)
 wLength       = 0x08 (bytes)
 ```
@@ -130,12 +132,14 @@ A `read` is an IN USB control transfer, that is always for 8 bytes of data.
 
 This is used to get the response to a previous `write` command.
 
+`hid_get_feature_report(..., pad 0 on data for report number)`
+
 The message contains these attributes:
 
 ```
 bmRequestType = 0xa1
-bRequest      = 0x01
-wValue        = 0x0300
+bRequest      = 0x01    (HID_GET_REPORT)
+wValue        = 0x0300  (HID_FEATURE)
 wIndex        = 0x00
 wLength       = 0x08 (bytes)
 ```

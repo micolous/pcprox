@@ -8,3 +8,4 @@ Cmdpc*
 __pycache__
 *~
 *.cfg
+.DS_Store

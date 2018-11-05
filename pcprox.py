@@ -29,8 +29,13 @@ emitted the CmdpcProx tool.
 from math import ceil
 from time import sleep
 from struct import unpack
-import usb.core
-import usb.util
+#import usb.core
+#import usb.util
+
+# https://github.com/trezor/cython-hidapi
+
+import hid
+
 
 PCPROX_VENDOR = 0x0c27
 PCPROX_PRODUCT = 0x3bfa
@@ -126,12 +131,6 @@ CONFIG_PARAMS = (
 def _format_hex(i):
   return ' '.join(['%02x' % c for c in i])
 
-def find_pcprox():
-  """
-  Finds a pcProx by its vendor and product ID.
-  """
-  return usb.core.find(idVendor=PCPROX_VENDOR, idProduct=PCPROX_PRODUCT)
-
 def open_pcprox(debug=False):
   """
   Convienience function to find a pcProx by its vendor and product ID, then
@@ -139,7 +138,9 @@ def open_pcprox(debug=False):
 
   debug: If True, write packet traces to stdout.
   """
-  return PcProx(find_pcprox(), debug=debug)
+  dev = hid.device()
+  dev.open(PCPROX_VENDOR, PCPROX_PRODUCT)
+  return PcProx(dev, debug=debug)
 
 class DeviceInfo:
   def __init__(self, msg):
@@ -323,16 +324,9 @@ class PcProx:
     """
     Opens a connection to a pcProx device.
 
-    dev: pyusb device reference to which device to connect to.
+    dev: hidapi device reference to which device to connect to.
     debug: if True, this library will write USB packets to stdout.
     """
-    # Deactivate kernel driver (usbhid), requires root privs.
-    if dev.is_kernel_driver_active(0):
-      dev.detach_kernel_driver(0)
-
-    # Claim configuration
-    dev.set_configuration()
-
     self._dev = dev
     self._debug = debug
     
@@ -354,11 +348,7 @@ class PcProx:
     if self._debug:
       print('USB TX: >>> ' + _format_hex(msg))
 
-    ret = self._dev.ctrl_transfer(0x21, # bmRequestType
-                                  0x09, # bRequest
-                                  0x300, # wValue
-                                  0, # wIndex
-                                  msg) # data
+    ret = self._dev.send_feature_report(bytes(1) + msg)
 
     # TODO: handle return code
     sleep(0.001)
@@ -371,12 +361,8 @@ class PcProx:
 
     If a message of all NULL bytes is returned, then this method will instead
     return None.
-    """ 
-    msg = self._dev.ctrl_transfer(0xa1, # bmRequestType
-                                  0x01, # bRequest
-                                  0x301, # wValue
-                                  0, # wIndex
-                                  8) # data length
+    """
+    msg = self._dev.get_feature_report(0, 8)
 
     msg = bytes(msg)
     if self._debug:

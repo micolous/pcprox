@@ -29,11 +29,8 @@ emitted the CmdpcProx tool.
 from math import ceil
 from time import sleep
 from struct import unpack
-#import usb.core
-#import usb.util
 
 # https://github.com/trezor/cython-hidapi
-
 import hid
 
 
@@ -133,7 +130,7 @@ def _format_hex(i):
 
 def open_pcprox(debug=False):
   """
-  Convienience function to find a pcProx by its vendor and product ID, then
+  Convenience function to find a pcProx by its vendor and product ID, then
   open a connection to it.
 
   debug: If True, write packet traces to stdout.

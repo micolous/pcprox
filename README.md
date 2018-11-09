@@ -21,7 +21,7 @@ This **does not** support USB Serial or other non-USB interfaces.
 ## Requirements
 
 * Python 3.something
-* [cython-hidapi][0] (generally packaged as `python3-hidapi`)
+* [hidapi][0] (generally packaged as `python3-hidapi`)
 
 This software has been developed and tested on Linux and Mac OS X platforms.
 
@@ -72,7 +72,8 @@ device run as `root`.
 * [Physical disassembly notes](./disassembly.md)
 
 
-[0]: https://github.com/trezor/cython-hidapi
+[0]: https://pypi.org/project/hidapi/
 [1]: ./protocol.md
 [2]: https://github.com/goliatone/rfid-poc
 [3]: https://github.com/google/makerspace-auth/blob/master/software/authbox/badgereader_hid_keystroking.py
+

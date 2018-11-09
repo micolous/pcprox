@@ -359,13 +359,15 @@ class PcProx:
     If a message of all NULL bytes is returned, then this method will instead
     return None.
     """
-    msg = self._dev.get_feature_report(0, 8)
+    msg = self._dev.get_feature_report(0, 9)
 
-    msg = bytes(msg)
+    # Feature reports have a report number added to them, skip that.
+    msg = bytes(msg[1:])
+
     if self._debug:
       print('USB RX: >>> ' + _format_hex(msg))
     
-    if msg == NULL_MSG:
+    if not msg or msg == NULL_MSG:
       return None
 
     return msg

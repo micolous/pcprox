@@ -107,42 +107,44 @@ All communication happens with [USB control transfers][usb-ctrl].
 There are two basic, high-level commands: `read` and `write`.  Every `read` and
 every `write` is 8 bytes long.
 
-### write
-
-A `write` is an OUT USB control transfer that always contains 8 bytes of data.
-
-This is used to send commands to the device.
-
-`hid_send_feature_report(..., pad 0 on data for report number)`
-
-The message contains these attributes:
-
-```
-bmRequestType = 0x21
-bRequest      = 0x09    (HID_SET_REPORT)
-wValue        = 0x0300  (HID_FEATURE)
-wIndex        = 0x00    (interface)
-data          = (command to send)
-wLength       = 0x08 (bytes)
-```
-
 ### read
 
-A `read` is an IN USB control transfer, that is always for 8 bytes of data.
+A `read` is a [USB HID][usb-hid] Get Feature Report. Report IDs are not used.
+Reports are always 8 bytes long.
 
 This is used to get the response to a previous `write` command.
-
-`hid_get_feature_report(..., pad 0 on data for report number)`
 
 The message contains these attributes:
 
 ```
 bmRequestType = 0xa1
-bRequest      = 0x01    (HID_GET_REPORT)
-wValue        = 0x0300  (HID_FEATURE)
-wIndex        = 0x00
-wLength       = 0x08 (bytes)
+bRequest      = 0x01    (GET_REPORT)
+wValue        = 0x0300  (FEATURE, report ID 0)
+wIndex        = 0x00    (Interface)
+wLength       = 0x08    (bytes)
 ```
+
+hidapi: `hid_get_feature_report(device, "\0" + 8 byte buffer, 9)`
+
+### write
+
+A `write` is a [USB HID][usb-hid] Set Feature Report. Report IDs are not used.
+Reports are always 8 bytes long.
+
+This is used to send commands to the device.
+
+The message contains these attributes:
+
+```
+bmRequestType = 0x21
+bRequest      = 0x09    (SET_REPORT)
+wValue        = 0x0300  (FEATURE, report ID 0)
+wIndex        = 0x00    (Interface)
+data          = (command to send)
+wLength       = 0x08    (bytes)
+```
+
+hidapi: `hid_send_feature_report(device, "\0" + msg, 9)`
 
 ## Commands
 
@@ -449,6 +451,7 @@ The total bit length of the card is
 
 [0]: https://github.com/micolous/pcprox
 [usb-ctrl]: https://www.beyondlogic.org/usbnutshell/usb4.shtml
+[usb-hid]: https://www.usb.org/sites/default/files/documents/hid1_11.pdf
 [barkweb-wiegand]: http://cardinfo.barkweb.com.au/
 [scancodes]: https://www.win.tue.nl/~aeb/linux/kbd/scancodes-14.html
 

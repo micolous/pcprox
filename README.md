@@ -21,12 +21,15 @@ This **does not** support USB Serial or other non-USB interfaces.
 ## Requirements
 
 * Python 3.something (Python 2 is not supported)
-* [pyusb][0]
+* [cython-hidapi][0]
 
-This software has been developed and tested on Linux platforms.  It should work
-without trouble on any Linux-supported CPU architecture (eg: ARM).
+This software has been developed and tested on Linux and Mac OS X platforms.
+
+For Linux, it should work on any Linux-supported CPU architecture (eg: ARM).
 
 ## Setting up permissions
+
+### Linux
 
 Copy [the udev rules](./udev/60-rfideas-permissions.rules) (as root):
 
@@ -45,6 +48,11 @@ using `systemd`, modify this configuration to replace `TAG+="uaccess"` with
 something like `GROUP="rfidusers"`, which will instead set ACLs based on group
 membership.
 
+### Mac OS X
+
+Mac OS X requires that all applications requesting direct access to a keyboard
+device run as `root`.
+
 ## Examples
 
 * [configure.py](./configure.py): A basic configuration utility that supports
@@ -62,8 +70,7 @@ membership.
 * [Physical disassembly notes](./disassembly.md)
 
 
-[0]: https://pyusb.github.io/pyusb/
+[0]: https://github.com/trezor/cython-hidapi
 [1]: ./protocol.md
 [2]: https://github.com/goliatone/rfid-poc
 [3]: https://github.com/google/makerspace-auth/blob/master/software/authbox/badgereader_hid_keystroking.py
-

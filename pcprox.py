@@ -326,6 +326,7 @@ class PcProx:
     """
     self._dev = dev
     self._debug = debug
+    self._dev.set_nonblocking(1)
     
   def close(self):
     # TODO

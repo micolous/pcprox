@@ -8,5 +8,5 @@
 #  2. sudo udevadm control --reload-rules
 #
 
-ATTRS{idVendor}=="0c27", ATTRS{idProduct}=="3bfa", TAG+="uaccess"
-
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="0c27", ATTRS{idProduct}=="3bfa", TAG+="uaccess"
+KERNEL=="hidraw*", ATTRS{idVendor}=="0c27", ATTRS{idProduct}=="3bfa", TAG+="uaccess"

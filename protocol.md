@@ -126,6 +126,16 @@ wLength       = 0x08    (bytes)
 
 hidapi: `hid_get_feature_report(device, "\0" + 8 byte buffer, 9)`
 
+> **Note:** Due to [a bug in hidapi on OSX][hidapi-osx], we need to send a
+> slightly different command:
+>
+> ```c
+> char* buf = "\1\0\0\0\0\0\0";
+> hid_get_feature_report(device, &buf, 8);
+> ```
+>
+> This results in a different `wValue`, but the device seems to still accept it.
+
 ### write
 
 A `write` is a [USB HID][usb-hid] Set Feature Report. Report IDs are not used.
@@ -454,4 +464,5 @@ The total bit length of the card is
 [usb-hid]: https://www.usb.org/sites/default/files/documents/hid1_11.pdf
 [barkweb-wiegand]: http://cardinfo.barkweb.com.au/
 [scancodes]: https://www.win.tue.nl/~aeb/linux/kbd/scancodes-14.html
+[hidapi-osx]: https://github.com/signal11/hidapi/pull/219
 

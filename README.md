@@ -20,12 +20,14 @@ This **does not** support USB Serial or other non-USB interfaces.
 
 ## Requirements
 
-* Python 3.something (Python 2 is not supported)
-* [cython-hidapi][0]
+* Python 3.something
+* [cython-hidapi][0] (generally packaged as `python3-hidapi`)
 
 This software has been developed and tested on Linux and Mac OS X platforms.
 
 For Linux, it should work on any Linux-supported CPU architecture (eg: ARM).
+
+_Python 2.x is not supported, and will not be supported._
 
 ## Setting up permissions
 

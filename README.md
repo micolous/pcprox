@@ -71,13 +71,14 @@ bug][4], the device is always opened in read-write mode.
 * [usbtest.py](./usbtest.py): An example application that runs the pcProx in
   non-keyboard mode, and flashes the LEDs on the device.
 
-## Other documentation
+## Other resources
 
 * [Protocol documentation][1] (also explains the behaviour of different device
   settings)
 
 * [Physical disassembly notes](./disassembly.md)
 
+* [Docker container for running `CmdpcProx`](./cmdpcprox_docker)
 
 [0]: https://pypi.org/project/hidapi/
 [1]: ./protocol.md

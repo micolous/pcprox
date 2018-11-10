@@ -40,7 +40,7 @@ either a flat-head screwdriver or a guitar pick.
 
 ### PIC18F2450
 
-The [PC18F2450][PC18F2450] controls the USB connection, and drives the HID eProx
+The [PIC18F2450][PIC18F2450] controls the USB connection, and drives the HID eProx
 module.
 
 A header for ["high voltage" programming][pic18f-pgm] is exposed at connector
@@ -55,10 +55,9 @@ A header for ["high voltage" programming][pic18f-pgm] is exposed at connector
 5. `GND`
 
 This can be attached to a PIC programmer, such as a PICkit2 compatible
-programmer that supports ICSP (in-circuit system programming).
-
-Unfortunately, the device has the code-protect bits set on all parts of memory,
-making it more difficult to dump.
+programmer that supports ICSP (in-circuit system programming). The device has
+the code-protect bits set on all parts of memory, making it more difficult to
+dump.
 
 [Heart of Darkness][heart-of-darkness] describes a method for dumping PIC
 microcontrollers by using _two_ identically-programmed PICs:
@@ -73,8 +72,6 @@ microcontrollers by using _two_ identically-programmed PICs:
 
 From there the two dumps can be merged, the code-protect bits can be disabled,
 and it would enable on-device debugging as well.
-
-Unfortunately, I don't have _two_ devices to try this with. :(
 
 There is some firmware published online which is supposedly in "HEX" format
 (used by the official flashing tool), but these files do not appear to be in

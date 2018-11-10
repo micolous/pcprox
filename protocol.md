@@ -1,11 +1,13 @@
 # pcProx protocol
 
-This document describes communication with the RF IDeas pcProx readers.
+This document describes communication with the RFIDeas pcProx readers.
 
 This document comes from [Python pcprox library][0].  It is not an official
-document, and not written or endorsed by RFIDeas.  It is written in the hope
-that it can be useful for writing compatible software for the pcProx readers
-without their proprietary (and costly) SDK.
+document, and not written or endorsed by RFIDeas.
+
+This document is written in the hope that it can be useful for writing
+compatible software for the pcProx readers without needing their proprietary
+SDK.
 
 ## Models / firmware
 
@@ -13,7 +15,7 @@ This documentation was written for the following models:
 
 * RDR-6081AKU / RDR-6081APU (125kHz HID Prox Desktop USB reader)
 
-This probably works with other _USB_ HID Prox models:
+This probably works with other _USB_ HID Prox models (`RDR-60_1A_U`):
 
 * RDR-6011AKU / RDR-6021AKU (125kHz HID Prox Vertical/Horizontal Nano reader)
 * RDR-60D1AKU (125kHz HID Prox USB dongle)
@@ -28,8 +30,6 @@ This is written for devices that emulate a USB keyboard device, that show up in
 
 The firmware version tested was `07.3.0` (alternatively written as `07.30` in
 configuration dumps).
-
-I haven't looked at the firmware update process, or for firmware images.
 
 ## Notation used in this document
 
@@ -126,15 +126,15 @@ wLength       = 0x08    (bytes)
 
 hidapi: `hid_get_feature_report(device, "\0" + 8 byte buffer, 9)`
 
-> **Note:** Due to [a bug in hidapi on OSX][hidapi-osx], we need to send a
-> slightly different command:
->
-> ```c
-> char* buf = "\1\0\0\0\0\0\0";
-> hid_get_feature_report(device, &buf, 8);
-> ```
->
-> This results in a different `wValue`, but the device seems to still accept it.
+**Note:** Due to [a bug in hidapi on OSX][hidapi-osx], you need to send a
+slightly different command which includes a report ID:
+
+```c
+char* buf = "\1\0\0\0\0\0\0";
+hid_get_feature_report(device, &buf, 8);
+```
+
+This results in a different `wValue`, but the device seems to still accept it.
 
 ### write
 
@@ -260,6 +260,9 @@ This instructs the device to select a configuration page for reading or writing.
 If _writing_ to the configuration, this must then be followed by a _finish
 configuration_ command to resume normal device operation.
 
+Configuration options are also described in [the configuration utility
+manual][config-manual], and in exported "HWG" files.
+
 #### Page 0 (0x80)
 
 ```c
@@ -309,7 +312,10 @@ char iELDelim               // If bNoUseELChar = 0, this character is sent after
                             // doesn't send anything.
 
   bool bSndOnRx             // TODO
-  bool bHaltKBSnd           // TODO
+
+  bool bHaltKBSnd           // If 0, the card number will be sent as keystrokes.
+                            // If 1, then the card data can only be read with
+                            // the 'card read buffer' commands.
 }
 ```
 
@@ -394,6 +400,10 @@ char iLeadChr2
 
 This gets the contents of the card read buffer.
 
+This works best when `bHaltKBSnd = 1`, which will prevent pcProx from sending
+keystrokes for the card ID. [The configuration manual][config-manual] describes
+this as _Software Developer Kit (SDK) Mode_.
+
 For _HID cards_, pcProx will:
 
 * Remove parity bits according to `iLeadParityBitCnt` and `iTrailParityBitCnt`.
@@ -465,4 +475,4 @@ The total bit length of the card is
 [barkweb-wiegand]: http://cardinfo.barkweb.com.au/
 [scancodes]: https://www.win.tue.nl/~aeb/linux/kbd/scancodes-14.html
 [hidapi-osx]: https://github.com/signal11/hidapi/pull/219
-
+[config-manual]: https://www.rfideas.com/files/rfideas/files/support/doc/manuals/pcProx_Manual.pdf

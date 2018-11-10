@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-This has been tested with the RDR-6081AKU/APU (RF IDeas pcProx 125kHz HID Prox
+This has been tested with the RDR-6081AKU/APU (RFIDeas pcProx 125kHz HID Prox
 Desktop USB reader). It might work with other readers, but I don't have any
 other readers to test.
 

@@ -19,14 +19,25 @@ This **does not** support USB Serial or other non-USB interfaces.
 
 ## Requirements
 
-* Python 3.something
+* Python 3.x
 * [hidapi][0] (generally packaged as `python3-hidapi`)
 
-This software has been developed and tested on Linux and Mac OS X platforms.
-
-For Linux, it should work on any Linux-supported CPU architecture (eg: ARM).
-
 _Python 2.x is not supported, and will not be supported._
+
+## Platform support
+
+Known-working platforms:
+
+* Linux (tested on `x86_64`, but will probably work on any Linux-supported CPU
+  architecture, including ARM).
+* Mac OS X (tested on 10.14)
+
+Non-working platforms:
+
+* Windows ([would require this hidapi patch][4])
+
+Otherwise, this should run wherever hidapi runs, as long as one can send USB HID
+feature reports to keyboard devices (which pcProx simulates).
 
 ## Setting up permissions
 
@@ -53,14 +64,6 @@ membership.
 
 Mac OS X requires that all applications requesting direct access to a keyboard
 device run as `root`.
-
-### Windows
-
-Windows doesn't allow raw access to keyboard devices (any more), as it could be
-used to build a keylogger.
-
-This library doesn't actually use that functionality, but [due to a hidapi
-bug][4], the device is always opened in read-write mode.
 
 ## Examples
 

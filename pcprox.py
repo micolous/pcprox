@@ -426,7 +426,7 @@ class PcProx:
     if card_data is None:
       return None
 
-    # This cas be skipped without issue if there is no card there
+    # This can be skipped without issue if there is no card there
     card_info = self.interact(b'\x8e')
     if card_info is None:
       return None

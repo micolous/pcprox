@@ -42,7 +42,7 @@ Data types are as follows:
 * `bool`: 1 bit, boolean field (see _sub-byte structures_ below)
 * `uint4`: 4 bit, unsigned integer (see _sub-byte structures_ below)
 * `uint8`: 8 bit, unsigned integer
-* `char`: 8 bit, [keyboard scancode][scancodes]
+* `char`: 8 bit, [keyboard scancode][scancodes]. Bit 0x80 indicates SHIFT state (eg: 0x04 = a, 0x84 = A)
 * `uint16`: 16 bit, unsigned little-endian integer
 * `uint24`: 24 bit, unsigned little-endian integer
 

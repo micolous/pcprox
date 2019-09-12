@@ -129,6 +129,79 @@ def _format_hex(i):
     return ' '.join(['%02x' % c for c in i])
 
 
+def _int_field(page, pos, first_bit=0, bit_len=8, multiplier=1,
+               max_value=None, character=False):
+    """Property declaration for integer fields."""
+    # NOTE: this method only supports up to 8 bits
+    if max_value is None:
+        max_value = ((2 ** bit_len) - 1) * multiplier
+
+    if first_bit > 0:
+        bit_len = min(bit_len, 8 - first_bit)
+
+    def getter(self):
+        v = self.pages[page][pos]
+
+        if character:
+            return bytes([v])
+
+        if first_bit > 0:
+            v >>= first_bit
+
+        if bit_len < 8:
+            v &= (2 ** bit_len) - 1
+
+        if multiplier != 1:
+            v *= multiplier
+
+        return v
+
+    def setter(self, new_val):
+        if character:
+            if isinstance(new_val, str):
+                raise Exception('bytestr required')
+
+            if isinstance(new_val, bytes) and len(new_val) != 1:
+                raise Exception('bytestr must be 1 byte')
+        else:
+            if new_val > max_value or new_val < 0:
+                raise Exception('value must be in range 0..%d' % max_value)
+
+            old_val = 0
+            mask = 0xff
+            new_val //= multiplier
+
+            if first_bit != 0 or bit_len != 8:
+                old_val = self.pages[page][pos]
+
+                # Mask out the bits
+                mask = (((2 ** bit_len) - 1) << first_bit)
+                old_val &= 0xff ^ mask
+
+                new_val <<= first_bit
+
+            new_val &= mask
+
+            new_val |= old_val
+        self.pages[page][pos] = new_val
+
+    return property(getter, setter)
+
+
+def _bool_field(page, pos, bit):
+    """Property definition for boolean fields."""
+    def getter(self):
+        return ((self.pages[page][pos] >> bit) & 1) > 0
+
+    def setter(self, new_val):
+        if new_val:
+            self.pages[page][pos] |= 1 << bit
+        else:
+            self.pages[page][pos] &= 0xff ^ (1 << bit)
+
+    return property(getter, setter)
+
+
 def open_pcprox(debug=False):
     """
   Convenience function to find a pcProx by its vendor and product ID, then
@@ -162,75 +235,6 @@ class Configuration:
         self.pages = []
         for page in pages:
             self.pages.append(list(page))
-
-    def _int_field(page, pos, first_bit=0, bit_len=8, multiplier=1,
-                   max_value=None, character=False):
-        # NOTE: this method only supports up to 8 bits
-        if max_value is None:
-            max_value = ((2 ** bit_len) - 1) * multiplier
-
-        if first_bit > 0:
-            bit_len = min(bit_len, 8 - first_bit)
-
-        def getter(self):
-            v = self.pages[page][pos]
-
-            if character:
-                return bytes([v])
-
-            if first_bit > 0:
-                v >>= first_bit
-
-            if bit_len < 8:
-                v &= (2 ** bit_len) - 1
-
-            if multiplier != 1:
-                v *= multiplier
-
-            return v
-
-        def setter(self, new_val):
-            if character:
-                if isinstance(new_val, str):
-                    raise Exception('bytestr required')
-
-                if isinstance(new_val, bytes) and len(new_val) != 1:
-                    raise Exception('bytestr must be 1 byte')
-            else:
-                if new_val > max_value or new_val < 0:
-                    raise Exception('value must be in range 0..%d' % max_value)
-
-                old_val = 0
-                mask = 0xff
-                new_val //= multiplier
-
-                if first_bit != 0 or bit_len != 8:
-                    old_val = self.pages[page][pos]
-
-                    # Mask out the bits
-                    mask = (((2 ** bit_len) - 1) << first_bit)
-                    old_val &= 0xff ^ mask
-
-                    new_val <<= first_bit
-
-                new_val &= mask
-
-                new_val |= old_val
-            self.pages[page][pos] = new_val
-
-        return property(getter, setter)
-
-    def _bool_field(page, pos, bit):
-        def getter(self):
-            return ((self.pages[page][pos] >> bit) & 1) > 0
-
-        def setter(self, new_val):
-            if new_val:
-                self.pages[page][pos] |= 1 << bit
-            else:
-                self.pages[page][pos] &= 0xff ^ (1 << bit)
-
-        return property(getter, setter)
 
     # Page 0
     iFACDispLen = _int_field(0, 0)
@@ -441,4 +445,4 @@ class PcProx:
         # Strip off bytes that aren't needed
         buffer_byte_length = int(ceil(bit_length / 8.))
 
-        return (card_data[:buffer_byte_length], bit_length)
+        return card_data[:buffer_byte_length], bit_length

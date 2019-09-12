@@ -49,15 +49,20 @@ def main(set_true, set_false, set_int, write_eeprom=False, debug=False):
     config = dev.get_config()
 
     # Now apply this config
-    # TODO: handle unknown options better
     if set_true is not None:
         for o in set_true:
+            if not hasattr(config, o):
+                raise TypeError(f'Unknown option {o}')
             setattr(config, o, True)
     if set_false is not None:
         for o in set_false:
+            if not hasattr(config, o):
+                raise TypeError(f'Unknown option {o}')
             setattr(config, o, False)
     if set_int is not None:
         for k, v in set_int:
+            if not hasattr(config, o):
+                raise TypeError(f'Unknown option {o}')
             setattr(config, k, v)
 
     # Has anything been set?

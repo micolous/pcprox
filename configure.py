@@ -22,85 +22,88 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import argparse
 import pcprox
 
-class IntConfigAction(argparse.Action):
-  def __init__(self, option_strings, dest, nargs=None, **kwargs):
-    if nargs is not None:
-      raise ValueError('nargs not allowed')
-    super(IntConfigAction, self).__init__(option_strings, dest, **kwargs)
 
-  def __call__(self, parser, namespace, values, option_string=None):
-    # Parse options like 'abc=1'
-    if getattr(namespace, self.dest) is None:
-      setattr(namespace, self.dest, [])
-    
-    k, v = values.split('=')
-    v = int(v)
-    getattr(namespace, self.dest).append((k, v))
+class IntConfigAction(argparse.Action):
+    def __init__(self, option_strings, dest, nargs=None, **kwargs):
+        if nargs is not None:
+            raise ValueError('nargs not allowed')
+        super(IntConfigAction, self).__init__(option_strings, dest, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        # Parse options like 'abc=1'
+        if getattr(namespace, self.dest) is None:
+            setattr(namespace, self.dest, [])
+
+        k, v = values.split('=')
+        v = int(v)
+        getattr(namespace, self.dest).append((k, v))
 
 
 def main(set_true, set_false, set_int, write_eeprom=False, debug=False):
-  dev = pcprox.open_pcprox(debug=debug)
+    dev = pcprox.open_pcprox(debug=debug)
 
-  # Show the device info
-  print(repr(dev.get_device_info()))
+    # Show the device info
+    print(repr(dev.get_device_info()))
 
-  # Dump the configuration from the device.
-  config = dev.get_config()
+    # Dump the configuration from the device.
+    config = dev.get_config()
 
-  # Now apply this config
-  # TODO: handle unknown options better
-  if set_true is not None:
-    for o in set_true:
-      setattr(config, o, True)
-  if set_false is not None:
-    for o in set_false:
-      setattr(config, o, False)
-  if set_int is not None:
-    for k, v in set_int:
-      setattr(config, k, v)
+    # Now apply this config
+    # TODO: handle unknown options better
+    if set_true is not None:
+        for o in set_true:
+            setattr(config, o, True)
+    if set_false is not None:
+        for o in set_false:
+            setattr(config, o, False)
+    if set_int is not None:
+        for k, v in set_int:
+            setattr(config, k, v)
 
-  # Has anything been set?
-  if any(x is not None for x in (set_true, set_false, set_int)):
-    print('/ New configuration:')
-    config.print_config()
+    # Has anything been set?
+    if any(x is not None for x in (set_true, set_false, set_int)):
+        print('/ New configuration:')
+        config.print_config()
 
-    # Send the updated configuration
-    config.set_config(dev)
+        # Send the updated configuration
+        config.set_config(dev)
 
-    if write_eeprom:
-      print('/ Writing to EEPROM...')
-      dev.save_config(0x7)
+        if write_eeprom:
+            print('/ Writing to EEPROM...')
+            dev.save_config(0x7)
+        else:
+            dev.end_config()
     else:
-      dev.end_config()
-  else:
-    print('/ Current configuration:')
-    config.print_config()
+        print('/ Current configuration:')
+        config.print_config()
 
-  print('/ Done!')
+    print('/ Done!')
+
 
 if __name__ == '__main__':
-  parser = argparse.ArgumentParser(
-    description='Configuration utility for pcProx')
+    parser = argparse.ArgumentParser(
+        description='Configuration utility for pcProx')
 
-  parser.add_argument('-d', '--debug',
-    action='store_true', help='Enable debug traces')
+    parser.add_argument('-d', '--debug',
+                        action='store_true', help='Enable debug traces')
 
-  parser.add_argument('-t', '--set-true', metavar='bOPTION',
-    action='append',
-    help='Set configuration flag to true / 1')
+    parser.add_argument('-t', '--set-true', metavar='bOPTION',
+                        action='append',
+                        help='Set configuration flag to true / 1')
 
-  parser.add_argument('-f', '--set-false', metavar='bOPTION',
-    action='append',
-    help='Set configuration flag to false / 0')
+    parser.add_argument('-f', '--set-false', metavar='bOPTION',
+                        action='append',
+                        help='Set configuration flag to false / 0')
 
-  parser.add_argument('-i', '--set-int', metavar='iOPTION=VALUE',
-    action=IntConfigAction,
-    help='Set integer to value, eg: [-i iLeadParityBitCnt=1]')
+    parser.add_argument('-i', '--set-int', metavar='iOPTION=VALUE',
+                        action=IntConfigAction,
+                        help='Set integer to value, eg: [-i '
+                             'iLeadParityBitCnt=1]')
 
-  parser.add_argument('-w', '--write-eeprom',
-    action='store_true',
-    help='Writes the configuration to EEPROM')
+    parser.add_argument('-w', '--write-eeprom',
+                        action='store_true',
+                        help='Writes the configuration to EEPROM')
 
-  options = parser.parse_args()
-  main(options.set_true, options.set_false, options.set_int, options.write_eeprom, options.debug)
-
+    options = parser.parse_args()
+    main(options.set_true, options.set_false, options.set_int,
+         options.write_eeprom, options.debug)

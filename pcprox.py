@@ -26,9 +26,12 @@ application. The configuration options shown here are documented in the
 configuration files emitted by the CmdpcProx tool.
 """
 
+from __future__ import annotations
+
 from math import ceil
-from time import sleep
 from struct import unpack
+from time import sleep
+from typing import Iterable, Iterator, Optional, Sequence, Text, Tuple, Union
 
 # https://github.com/trezor/cython-hidapi
 import hid
@@ -125,12 +128,16 @@ CONFIG_PARAMS = (
 )
 
 
-def _format_hex(i):
+def _format_hex(i: bytes) -> Text:
     return ' '.join(['%02x' % c for c in i])
 
 
-def _int_field(page, pos, first_bit=0, bit_len=8, multiplier=1,
-               max_value=None, character=False):
+def _int_field(page: int,
+               pos: int,
+               first_bit: int = 0,
+               bit_len: int = 8,
+               multiplier: int = 1,
+               max_value: Optional[int] = None) -> property:
     """Property declaration for integer fields."""
     # NOTE: this method only supports up to 8 bits
     if max_value is None:
@@ -139,11 +146,8 @@ def _int_field(page, pos, first_bit=0, bit_len=8, multiplier=1,
     if first_bit > 0:
         bit_len = min(bit_len, 8 - first_bit)
 
-    def getter(self):
+    def getter(self) -> int:
         v = self.pages[page][pos]
-
-        if character:
-            return bytes([v])
 
         if first_bit > 0:
             v >>= first_bit
@@ -156,39 +160,33 @@ def _int_field(page, pos, first_bit=0, bit_len=8, multiplier=1,
 
         return v
 
-    def setter(self, new_val):
-        if character:
-            if isinstance(new_val, str):
-                raise Exception('bytestr required')
+    def setter(self, new_val: int):
+        if new_val > max_value or new_val < 0:
+            raise Exception('value must be in range 0..%d' % max_value)
 
-            if isinstance(new_val, bytes) and len(new_val) != 1:
-                raise Exception('bytestr must be 1 byte')
-        else:
-            if new_val > max_value or new_val < 0:
-                raise Exception('value must be in range 0..%d' % max_value)
+        old_val = 0
+        mask = 0xff
+        new_val //= multiplier
 
-            old_val = 0
-            mask = 0xff
-            new_val //= multiplier
+        if first_bit != 0 or bit_len != 8:
+            old_val = self.pages[page][pos]
 
-            if first_bit != 0 or bit_len != 8:
-                old_val = self.pages[page][pos]
+            # Mask out the bits
+            mask = (((2 ** bit_len) - 1) << first_bit)
+            old_val &= 0xff ^ mask
 
-                # Mask out the bits
-                mask = (((2 ** bit_len) - 1) << first_bit)
-                old_val &= 0xff ^ mask
+            new_val <<= first_bit
 
-                new_val <<= first_bit
+        new_val &= mask
 
-            new_val &= mask
+        new_val |= old_val
 
-            new_val |= old_val
         self.pages[page][pos] = new_val
 
     return property(getter, setter)
 
 
-def _bool_field(page, pos, bit):
+def _bool_field(page: int, pos: int, bit: int) -> property:
     """Property definition for boolean fields."""
     def getter(self):
         return ((self.pages[page][pos] >> bit) & 1) > 0
@@ -202,7 +200,29 @@ def _bool_field(page, pos, bit):
     return property(getter, setter)
 
 
-def open_pcprox(debug=False):
+def _char_field(page: int, pos: int) -> property:
+    int_prop = _int_field(page, pos)
+
+    def getter(self) -> bytes:
+        return bytes([int_prop.fget(self)])
+
+    def setter(self, new_val: Union[bytes, int]) -> None:
+        if isinstance(new_val, int):
+            # convert to bytes
+            new_val = bytes([new_val])
+
+        if not isinstance(new_val, bytes):
+            raise TypeError('bytes required')
+
+        if len(new_val) != 1:
+            raise TypeError('bytes must be 1 byte')
+
+        int_prop.fset(self, new_val[0])
+
+    return property(getter, setter)
+
+
+def open_pcprox(debug: bool = False) -> PcProx:
     """
   Convenience function to find a pcProx by its vendor and product ID, then
   open a connection to it.
@@ -215,26 +235,26 @@ def open_pcprox(debug=False):
 
 
 class DeviceInfo:
-    def __init__(self, msg):
+    def __init__(self, msg: bytes):
         # TODO: figure this out device_type better
         minor_ver, major_ver, self.device_type = unpack('<2xBBxHx', msg)
         self.firmware_version_tuple = (
             major_ver, minor_ver >> 4, minor_ver & 0xf)
 
     @property
-    def firmware_version(self):
+    def firmware_version(self) -> Text:
         return '%02d.%d.%d' % self.firmware_version_tuple
 
-    def __repr__(self):
+    def __repr__(self) -> Text:
         return '<DeviceInfo: firmware=%s, device=0x%04x>' % (
             self.firmware_version, self.device_type)
 
 
 class Configuration:
-    def __init__(self, pages):
+    def __init__(self, pages: Iterable[Optional[bytes]]):
         self.pages = []
         for page in pages:
-            self.pages.append(list(page))
+            self.pages.append(bytearray(page))
 
     # Page 0
     iFACDispLen = _int_field(0, 0)
@@ -243,8 +263,8 @@ class Configuration:
     iTrailParityBitCnt = _int_field(0, 2, first_bit=4)
     iIDBitCnt = _int_field(0, 3)
     iTotalBitCnt = _int_field(0, 4)
-    iFACIDDelim = _int_field(0, 5, character=True)
-    iELDelim = _int_field(0, 6, character=True)
+    iFACIDDelim = _char_field(0, 5)
+    iELDelim = _char_field(0, 6)
 
     bFixLenDsp = _bool_field(0, 7, 0)
     bFrcBitCntEx = _bool_field(0, 7, 1)
@@ -289,17 +309,17 @@ class Configuration:
     bRevBytes = _bool_field(2, 1, 6)
     bUseInvDataF = _bool_field(2, 1, 7)
 
-    iCrdGnChr0 = _int_field(2, 2, character=True)
-    iCrdGnChr1 = _int_field(2, 3, character=True)
+    iCrdGnChr0 = _char_field(2, 2)
+    iCrdGnChr1 = _char_field(2, 3)
     iLeadChrCnt = _int_field(2, 4, bit_len=4, max_value=3)
     iTrailChrCnt = _int_field(2, 4, first_bit=4, max_value=3)
-    iLeadChr0 = _int_field(2, 5, character=True)
-    iLeadChr1 = _int_field(2, 6, character=True)
-    iLeadChr2 = _int_field(2, 7, character=True)
+    iLeadChr0 = _char_field(2, 5)
+    iLeadChr1 = _char_field(2, 6)
+    iLeadChr2 = _char_field(2, 7)
 
     # TODO: Handle iTrailChrN
 
-    def generate_config(self):
+    def generate_config(self) -> Iterator[Text]:
         for section, keys in CONFIG_PARAMS:
             yield '/ %s' % section
             for key in keys:
@@ -312,27 +332,27 @@ class Configuration:
                 yield '%s = %d' % (key, v)
             yield ''
 
-    def print_config(self):
+    def print_config(self) -> None:
         for l in self.generate_config():
             print(l)
 
-    def set_config(self, dev, pages=None):
+    def set_config(self, dev: PcProx, pages: Optional[Sequence[int]] = None):
         if pages is None:
             pages = (0, 1, 2)
 
         for i in pages:
             dev.write(bytes([0x80 | i]))
-            dev.write(self.pages[i])
+            dev.write(bytes(self.pages[i]))
 
 
 class PcProx:
-    def __init__(self, dev, debug=False):
+    def __init__(self, dev, debug: bool = False):
         """
-    Opens a connection to a pcProx device.
+        Opens a connection to a pcProx device.
 
-    dev: hidapi device reference to which device to connect to.
-    debug: if True, this library will write USB packets to stdout.
-    """
+        dev: hidapi device reference to which device to connect to.
+        debug: if True, this library will write USB packets to stdout.
+        """
         self._dev = dev
         self._debug = debug
         self._dev.set_nonblocking(1)
@@ -341,7 +361,7 @@ class PcProx:
         # TODO
         pass
 
-    def write(self, msg):
+    def write(self, msg: bytes) -> None:
         # Sends a message to the device.
         # This needs to be exactly 8 bytes.
         msg = bytes(msg)
@@ -360,15 +380,15 @@ class PcProx:
         # TODO: handle return code
         sleep(0.001)
 
-    def read(self):
+    def read(self) -> Optional[bytes]:
         """
-    Reads a message from the device as a bytes object.
+        Reads a message from the device as a bytes object.
 
-    All messages are 8 bytes long. ie: len(d.read) == 8.
+        All messages are 8 bytes long. ie: len(d.read) == 8.
 
-    If a message of all NULL bytes is returned, then this method will instead
-    return None.
-    """
+        If a message of all NULL bytes is returned, then this method will instead
+        return None.
+        """
         msg = self._dev.get_feature_report(1, 8)
 
         # Feature reports have a report number added to them, skip that.
@@ -382,54 +402,54 @@ class PcProx:
 
         return msg
 
-    def interact(self, msg):
+    def interact(self, msg: bytes) -> Optional[bytes]:
         """
-    Writes to the device, then reads a message back from it.
-    """
+        Writes to the device, then reads a message back from it.
+        """
         self.write(msg)
         return self.read()
 
-    def get_device_info(self):
+    def get_device_info(self) -> DeviceInfo:
         """
-    Gets device information from the pcProx.
-    """
+        Gets device information from the pcProx.
+        """
         return DeviceInfo(self.interact(b'\x8a'))
 
-    def get_config(self):
+    def get_config(self) -> Configuration:
         """
-    Gets the running configuration from pcProx.
-    """
+        Gets the running configuration from pcProx.
+        """
         ret = []
         for page in (0x80, 0x81, 0x82):
             ret.append(self.interact(bytes([page])))
 
         return Configuration(ret)
 
-    def save_config(self, pages=0x7):
+    def save_config(self, pages: int = 0x7) -> None:
         """
-    Writes configuration to the EEPROM for all pages.
+        Writes configuration to the EEPROM for all pages.
 
-    pages: bitmask of pages to write to the EEPROM.
-    """
+        pages: bitmask of pages to write to the EEPROM.
+        """
         # defaults to writing all pages
         self.write(bytes([0x90, pages]))
 
-    def end_config(self):
+    def end_config(self) -> None:
         """
-    Finishes configuration without writing to the EEPROM.
-    """
+        Finishes configuration without writing to the EEPROM.
+        """
         self.save_config(0)
 
-    def get_tag(self):
+    def get_tag(self) -> Optional[Tuple[bytes, int]]:
         """
-    Reads a single tag, and immediately returns, even if no tag was in the
-    field.
+        Reads a single tag, and immediately returns, even if no tag was in the
+        field.
 
-    Returns None if no tag was in the field.
+        Returns None if no tag was in the field.
 
-    Returns a tuple of (data, buffer_bits) if there was a tag in the field. See
-    `protocol.md` for information about how to interpret this buffer.
-    """
+        Returns a tuple of (data, buffer_bits) if there was a tag in the field. See
+        `protocol.md` for information about how to interpret this buffer.
+        """
         # Must send 8F first, else 8E will never be set!
         card_data = self.interact(b'\x8f')
         if card_data is None:

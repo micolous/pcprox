@@ -36,6 +36,12 @@ from typing import Iterable, Iterator, Optional, Sequence, Text, Tuple, Union
 # https://github.com/trezor/cython-hidapi
 import hid
 
+if not hasattr(hid, 'device'):
+    # https://github.com/micolous/pcprox/issues/1
+    raise ImportError(
+        'You have the wrong "hid" module in your Python path, please install '
+        'the correct one from https://github.com/trezor/cython-hidapi')
+
 PCPROX_VENDOR = 0x0c27
 PCPROX_PRODUCT = 0x3bfa
 

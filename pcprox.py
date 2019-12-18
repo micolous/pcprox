@@ -2,7 +2,7 @@
 """
 Implements control and configuration code for pcProx readers.
 
-Copyright 2018 Michael Farrell <micolous+git@gmail.com>
+Copyright 2018-2019 Michael Farrell <micolous+git@gmail.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

@@ -3,7 +3,7 @@
 """
 usbtest - test program for reading a card and changing LEDs on pcProx
 
-Copyright 2018 Michael Farrell <micolous+git@gmail.com>
+Copyright 2018-2019 Michael Farrell <micolous+git@gmail.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -81,7 +81,7 @@ def main(debug=False):
         # No card in the field, sleep
         sleep(.2)
 
-    # We were sucessful, do a little light show
+    # We were successful, do a little light show
     if found_card:
         print('We got a card! (blinking lights)')
         for x in range(20):

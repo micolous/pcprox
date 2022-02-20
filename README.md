@@ -20,7 +20,10 @@ This **does not** support USB Serial or other non-USB interfaces.
 ## Requirements
 
 * Python 3.x
-* [hidapi][0] (generally packaged as `python3-hidapi`)
+* [cython-hidapi][0] (generally packaged as `python3-hid` or `python3-hidapi`)
+
+*Note:* There are multiple Python libraries called `hid` or `hidapi`; this
+library was tested with the [Trezor fork][0].
 
 _Python 2.x is not supported, and will not be supported._
 
@@ -83,7 +86,7 @@ device run as `root`.
 
 * [Docker container for running `CmdpcProx`](./cmdpcprox_docker)
 
-[0]: https://pypi.org/project/hidapi/
+[0]: https://github.com/trezor/cython-hidapi/
 [1]: ./protocol.md
 [2]: https://github.com/goliatone/rfid-poc
 [3]: https://github.com/google/makerspace-auth/blob/master/software/authbox/badgereader_hid_keystroking.py
